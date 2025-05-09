@@ -3,6 +3,19 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import ximu3csv
+from aeon.utils.discovery import all_estimators
+
+all_estimators("classifier", tag_filter={"algorithm_type": "convolution"})
+
+from aeon.classification.convolution_based import (
+    Arsenal,
+    HydraClassifier,
+    MiniRocketClassifier,
+    MultiRocketClassifier,
+    MultiRocketHydraClassifier,
+    RocketClassifier,
+)
+from sklearn.metrics import accuracy_score
 
 labels = [
     "wave01",
@@ -32,17 +45,19 @@ def load_data(directory):
 
         motions[index, :, :] = imu
 
-    return motions, motions_labels
+    return motions, np.array(motions_labels)
 
 
 motions_train, motions_train_labels = load_data("train")
 motions_test, motions_test_labels = load_data("test")
-print(motions_train.shape)
-print(motions_train_labels)
 
-print(motions_test.shape)
-print(motions_test_labels)
+rocket = MiniRocketClassifier()
+rocket.fit(motions_train, motions_train_labels)
+y_pred = rocket.predict(motions_test)
+accuracy = accuracy_score(motions_test_labels, y_pred)
 
+print(accuracy)
+print(y_pred)
 
 plt.plot(motions_test[0][0])
 plt.show()
