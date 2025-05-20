@@ -1,10 +1,12 @@
 import os
+import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
 import ximu3csv
 from aeon.utils.discovery import all_estimators
 
+all_estimators("classifier", tag_filter={"algorithm_type": "convolution"})
 all_estimators("classifier", tag_filter={"algorithm_type": "convolution"})
 
 from aeon.classification.convolution_based import (
@@ -42,7 +44,6 @@ def load_data(directory):
 
         imu = np.hstack([devices[0].inertial.gyroscope.xyz, devices[0].inertial.accelerometer.xyz]).T
         imu = imu[:, :100]
-
         motions[index, :, :] = imu
 
     return motions, np.array(motions_labels)
@@ -51,13 +52,20 @@ def load_data(directory):
 motions_train, motions_train_labels = load_data("train")
 motions_test, motions_test_labels = load_data("test")
 
-rocket = MiniRocketClassifier()
-rocket.fit(motions_train, motions_train_labels)
+if False: # save after training
+    rocket = MiniRocketClassifier()
+    rocket.fit(motions_train, motions_train_labels)
+    with open('saved_model.pkl', 'wb') as file:
+        pickle.dump(rocket, file)
+else:   # load after training
+    with open('saved_model.pkl', 'rb') as file:
+        rocket = pickle.load(file)
+
 y_pred = rocket.predict(motions_test)
 accuracy = accuracy_score(motions_test_labels, y_pred)
 
-print(accuracy)
 print(y_pred)
+print(accuracy)
 
 plt.plot(motions_test[0][0])
 plt.show()
